@@ -1201,6 +1201,7 @@ def _build_email_html(sender_name, doc_title, message, sign_url, recipient_name)
 </html>
 """
 
-
-if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+import os
+PORT = int(os.getenv('PORT', 5000))
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=PORT)

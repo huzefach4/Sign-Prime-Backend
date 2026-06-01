@@ -34,12 +34,20 @@ SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 SENDGRID_FROM_EMAIL = os.getenv("SENDGRID_FROM_EMAIL")
 SENDGRID_FROM_NAME = os.getenv("SENDGRID_FROM_NAME", "SignPrime")
 JWT_SECRET = os.getenv("JWT_SECRET", "fallback-secret")
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+FRONTEND_URL = os.getenv(
+    "FRONTEND_URL",
+    "https://huzefach4.github.io/sign-frontend/#"
+).rstrip("/")
+PUBLIC_API_URL = os.getenv(
+    "PUBLIC_API_URL",
+    "https://sign-prime-backend.onrender.com/api"
+).rstrip("/")
 FIREBASE_STORAGE_BUCKET = os.getenv("FIREBASE_STORAGE_BUCKET")
 
 print("Bucket:", FIREBASE_STORAGE_BUCKET)
 print("SendGrid From Email:", SENDGRID_FROM_EMAIL)
 print("Frontend URL:", FRONTEND_URL)
+print("Public API URL:", PUBLIC_API_URL)
 
 if not SENDGRID_API_KEY:
     print("WARNING: SENDGRID_API_KEY is missing in .env")
@@ -50,10 +58,22 @@ if not SENDGRID_FROM_EMAIL:
 if JWT_SECRET == "fallback-secret":
     print("WARNING: JWT_SECRET is using fallback-secret. Set a real JWT_SECRET in .env")
 
+
+def build_frontend_url(path):
+    path = "/" + path.lstrip("/")
+
+    if "#" in FRONTEND_URL:
+        return f"{FRONTEND_URL}{path}"
+
+    if "github.io/sign-frontend" in FRONTEND_URL:
+        return f"{FRONTEND_URL}/#{path}"
+
+    return f"{FRONTEND_URL}{path}"
+
 # ─── Firebase Init ────────────────────────────────────────────────────────────
 
 if not firebase_admin._apps:
-    cred = credentials.Certificate("/etc/secrets/firebase-service-account.json")
+    cred = credentials.Certificate("firebase-service-account.json")
     firebase_admin.initialize_app(cred, {
         "storageBucket": FIREBASE_STORAGE_BUCKET
     })
@@ -569,7 +589,7 @@ def send_document(doc_id):
                 })
                 continue
 
-            sign_url = f"{FRONTEND_URL}/sign/{doc_id}/{recipient_token}"
+            sign_url = build_frontend_url(f"/sign/{doc_id}/{recipient_token}")
 
             html = _build_email_html(
                 sender_name=sender_name,
@@ -949,7 +969,7 @@ def get_sign_info(doc_id, token):
             "document_id": doc_id,
             "title": d.get("title", ""),
             "pdf_url": d.get("pdf_url", ""),
-            "preview_url": f"http://localhost:5000/api/documents/{doc_id}/preview",
+            "preview_url": f"{PUBLIC_API_URL}/documents/{doc_id}/preview",
             "sign_locations": signer_locations,
             "recipient_email": recipient.get("email", ""),
             "recipient_name": recipient.get("name", ""),
@@ -1201,7 +1221,6 @@ def _build_email_html(sender_name, doc_title, message, sign_url, recipient_name)
 </html>
 """
 
-import os
-PORT = int(os.getenv('PORT', 5000))
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=PORT)
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5000)

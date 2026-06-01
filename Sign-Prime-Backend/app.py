@@ -53,7 +53,7 @@ if JWT_SECRET == "fallback-secret":
 # ─── Firebase Init ────────────────────────────────────────────────────────────
 
 if not firebase_admin._apps:
-    cred = credentials.Certificate("firebase-service-account.json")
+    cred = credentials.Certificate("/etc/secrets/firebase-service-account.json")
     firebase_admin.initialize_app(cred, {
         "storageBucket": FIREBASE_STORAGE_BUCKET
     })
